@@ -16,6 +16,7 @@ import ProfilePage from "./pages/ProfilePage";
 import TasksPage from "./pages/TasksPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import AdminPanel from "./pages/AdminPanel";
+import PortfolioAnalyzer from "./pages/PortfolioAnalyzer";
 
 function ProtectedRoute({ component: Component, requiredRole }: { component: React.ComponentType<any>; requiredRole?: string }) {
   const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ function Router() {
       {/* Protected routes - Applicant/Artist */}
       <Route path="/apply" component={() => <ProtectedRoute component={ApplicationPortal} />} />
       <Route path="/assessment" component={() => <ProtectedRoute component={AssessmentModule} />} />
+      <Route path="/portfolio" component={() => <ProtectedRoute component={PortfolioAnalyzer} />} />
       <Route path="/learning" component={() => <ProtectedRoute component={LearningPage} />} />
       <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
       <Route path="/tasks" component={() => <ProtectedRoute component={TasksPage} />} />
