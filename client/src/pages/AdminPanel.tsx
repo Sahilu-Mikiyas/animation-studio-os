@@ -269,7 +269,7 @@ export default function AdminPanel() {
                     <h3 className="font-semibold text-foreground mb-2">Software</h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedApp.software_proficiency.map((software: string, idx: number) => (
-                        <span key={idx} className="badge-primary">{software}</span>
+                        <span key={idx} className="inline-flex items-center gap-2 px-2 py-1 rounded bg-primary/10 text-primary text-xs">{software}</span>
                       ))}
                     </div>
                   </div>

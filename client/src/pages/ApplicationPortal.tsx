@@ -195,7 +195,7 @@ export default function ApplicationPortal() {
                     {formData.software_proficiency.map((software, idx) => (
                       <div
                         key={idx}
-                        className="badge-primary flex items-center gap-2"
+                        className="inline-flex items-center gap-2 px-2 py-1 rounded bg-primary/10 text-primary text-xs flex items-center gap-2"
                       >
                         {software}
                         <button
@@ -227,7 +227,7 @@ export default function ApplicationPortal() {
                     {formData.discipline_interest.map((discipline, idx) => (
                       <div
                         key={idx}
-                        className="badge-secondary flex items-center gap-2"
+                        className="inline-flex items-center gap-2 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs flex items-center gap-2"
                       >
                         {discipline}
                         <button
@@ -367,7 +367,7 @@ export default function ApplicationPortal() {
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Software</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {formData.software_proficiency.map((s, i) => (
-                        <span key={i} className="badge-primary">{s}</span>
+                        <span key={i} className="inline-flex items-center gap-2 px-2 py-1 rounded bg-primary/10 text-primary text-xs">{s}</span>
                       ))}
                     </div>
                   </div>
@@ -377,7 +377,7 @@ export default function ApplicationPortal() {
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Disciplines</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {formData.discipline_interest.map((d, i) => (
-                        <span key={i} className="badge-secondary">{d}</span>
+                        <span key={i} className="inline-flex items-center gap-2 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs">{d}</span>
                       ))}
                     </div>
                   </div>

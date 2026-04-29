@@ -88,7 +88,7 @@ export default function DashboardHub() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground">Notifications</h3>
               {notifications && notifications.length > 0 && (
-                <span className="badge-primary text-xs">{notifications.length}</span>
+                <span className="inline-flex items-center gap-2 px-2 py-1 rounded bg-primary/10 text-primary text-xs text-xs">{notifications.length}</span>
               )}
               <AlertCircle className="w-5 h-5 text-muted-foreground" />
             </div>
