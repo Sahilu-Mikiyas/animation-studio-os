@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import { useAuth } from "./_core/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import LoginPage from "./pages/LoginPage";
-import DashboardLayout from "./components/DashboardLayout";
+import DashboardHub from "./pages/DashboardHub";
 import ApplicationPortal from "./pages/ApplicationPortal";
 import AssessmentModule from "./pages/AssessmentModule";
 import LearningPage from "./pages/LearningPage";
@@ -68,7 +68,7 @@ function Router() {
       <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} requiredRole="admin" />} />
 
       {/* Dashboard - main hub for authenticated users */}
-      <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardLayout} />} />
+      <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardHub} />} />
 
       {/* 404 */}
       <Route path="/404" component={NotFound} />
