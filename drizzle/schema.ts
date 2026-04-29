@@ -408,3 +408,107 @@ export const analytics = mysqlTable("analytics", {
 
 export type Analytics = typeof analytics.$inferSelect;
 export type InsertAnalytics = typeof analytics.$inferInsert;
+
+/**
+ * Portfolio files - uploaded animation/artwork files
+ */
+export const portfolio_files = mysqlTable("portfolio_files", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  
+  // File details
+  file_name: varchar("file_name", { length: 255 }).notNull(),
+  file_url: varchar("file_url", { length: 512 }).notNull(),
+  file_key: varchar("file_key", { length: 255 }).notNull(), // S3 key
+  file_type: varchar("file_type", { length: 50 }), // mp4, blend, etc.
+  file_size: int("file_size"), // in bytes
+  
+  // Metadata
+  title: varchar("title", { length: 255 }),
+  description: longtext("description"),
+  
+  // Status
+  status: mysqlEnum("status", ["uploaded", "analyzing", "analyzed", "failed"]).default("uploaded"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PortfolioFile = typeof portfolio_files.$inferSelect;
+export type InsertPortfolioFile = typeof portfolio_files.$inferInsert;
+
+/**
+ * Portfolio analysis results - AI-powered motion quality scoring
+ */
+export const portfolio_analysis = mysqlTable("portfolio_analysis", {
+  id: int("id").autoincrement().primaryKey(),
+  portfolio_file_id: int("portfolio_file_id").notNull(),
+  user_id: int("user_id").notNull(),
+  
+  // Overall score (0-100)
+  overall_score: tinyint("overall_score"),
+  
+  // Motion quality metrics
+  fluidity_score: tinyint("fluidity_score"), // 0-100
+  timing_score: tinyint("timing_score"), // 0-100
+  weight_score: tinyint("weight_score"), // 0-100
+  anticipation_score: tinyint("anticipation_score"), // 0-100
+  spacing_score: tinyint("spacing_score"), // 0-100
+  appeal_score: tinyint("appeal_score"), // 0-100
+  
+  // Automatic tags
+  tags: json("tags"), // Array of strings: ["smooth", "dynamic", "character-driven", etc.]
+  
+  // AI-generated insights
+  strengths: longtext("strengths"), // LLM analysis of what's good
+  areas_for_improvement: longtext("areas_for_improvement"), // LLM analysis of what needs work
+  detailed_feedback: longtext("detailed_feedback"), // Full LLM feedback
+  
+  // Comparison data
+  percentile_rank: tinyint("percentile_rank"), // 0-100, where does this rank
+  comparison_notes: text("comparison_notes"), // How it compares to similar work
+  
+  // Analysis metadata
+  model_version: varchar("model_version", { length: 50 }), // Which LLM model was used
+  analysis_timestamp: datetime("analysis_timestamp"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PortfolioAnalysis = typeof portfolio_analysis.$inferSelect;
+export type InsertPortfolioAnalysis = typeof portfolio_analysis.$inferInsert;
+
+/**
+ * Portfolio insights - aggregated analytics for user
+ */
+export const portfolio_insights = mysqlTable("portfolio_insights", {
+  id: int("id").autoincrement().primaryKey(),
+  user_id: int("user_id").notNull(),
+  
+  // Aggregate metrics
+  average_overall_score: decimal("average_overall_score", { precision: 5, scale: 2 }),
+  average_fluidity: decimal("average_fluidity", { precision: 5, scale: 2 }),
+  average_timing: decimal("average_timing", { precision: 5, scale: 2 }),
+  average_weight: decimal("average_weight", { precision: 5, scale: 2 }),
+  
+  // Top strengths across portfolio
+  top_strengths: json("top_strengths"), // Array of strength tags
+  
+  // Common areas for improvement
+  common_improvements: json("common_improvements"), // Array of improvement areas
+  
+  // Portfolio quality trend
+  quality_trend: json("quality_trend"), // Array of {date, score}
+  
+  // Total files analyzed
+  files_analyzed: int("files_analyzed").default(0),
+  
+  // Last analysis date
+  last_analyzed: datetime("last_analyzed"),
+  
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PortfolioInsights = typeof portfolio_insights.$inferSelect;
+export type InsertPortfolioInsights = typeof portfolio_insights.$inferInsert;

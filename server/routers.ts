@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { notifyOwner } from "./_core/notification";
 import { invokeLLM } from "./_core/llm";
+import { analyzePortfolioFile, calculatePortfolioInsights } from "./portfolioAnalyzer";
 
 export const appRouter = router({
   system: systemRouter,
@@ -307,6 +308,106 @@ export const appRouter = router({
           method: input.method,
           status: "pending",
         });
+      }),
+  }),
+
+  // Portfolio Analyzer
+  portfolio: router({
+    uploadFile: protectedProcedure
+      .input(z.object({
+        file_name: z.string(),
+        file_url: z.string(),
+        file_key: z.string(),
+        file_type: z.string(),
+        file_size: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const file = await db.createPortfolioFile(ctx.user.id, {
+          ...input,
+          status: "analyzing",
+        });
+        return file;
+      }),
+
+    getFiles: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getPortfolioFilesByUserId(ctx.user.id);
+      }),
+
+    analyzeFile: protectedProcedure
+      .input(z.object({
+        fileId: z.number(),
+        fileName: z.string(),
+        fileType: z.string(),
+        fileSize: z.number(),
+        fileUrl: z.string(),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        try {
+          // Run LLM analysis
+          const analysis = await analyzePortfolioFile(
+            input.fileName,
+            input.fileType,
+            input.fileSize,
+            input.fileUrl,
+            input.description
+          );
+
+          // Save analysis to database
+          await db.createPortfolioAnalysis({
+            portfolio_file_id: input.fileId,
+            user_id: ctx.user.id,
+            overall_score: analysis.overall_score,
+            fluidity_score: analysis.metrics.fluidity_score,
+            timing_score: analysis.metrics.timing_score,
+            weight_score: analysis.metrics.weight_score,
+            anticipation_score: analysis.metrics.anticipation_score,
+            spacing_score: analysis.metrics.spacing_score,
+            appeal_score: analysis.metrics.appeal_score,
+            tags: analysis.tags,
+            strengths: analysis.strengths,
+            areas_for_improvement: analysis.areas_for_improvement,
+            detailed_feedback: analysis.detailed_feedback,
+            percentile_rank: analysis.percentile_rank,
+            comparison_notes: analysis.comparison_notes,
+            model_version: "gpt-4-vision",
+            analysis_timestamp: new Date(),
+          });
+
+          // Update file status
+          await db.updatePortfolioFileStatus(input.fileId, "analyzed");
+
+          // Update portfolio insights
+          const analyses = await db.getPortfolioAnalysisByUserId(ctx.user.id);
+          const insights = calculatePortfolioInsights(analyses);
+          await db.updatePortfolioInsights(ctx.user.id, {
+            ...insights,
+            files_analyzed: analyses.length,
+            last_analyzed: new Date(),
+          });
+
+          return analysis;
+        } catch (error) {
+          console.error("[Portfolio] Analysis failed:", error);
+          await db.updatePortfolioFileStatus(input.fileId, "failed");
+          throw error;
+        }
+      }),
+
+    getAnalysis: protectedProcedure
+      .input(z.object({
+        fileId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getPortfolioAnalysisByFileId(input.fileId);
+      }),
+
+    getInsights: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getOrCreatePortfolioInsights(ctx.user.id);
       }),
   }),
 });

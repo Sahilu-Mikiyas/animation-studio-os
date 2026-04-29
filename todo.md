@@ -172,3 +172,37 @@
 - [ ] Security audit
 - [ ] Final testing and QA
 - [ ] Deployment to production
+
+## PHASE 17: UI Redesign - Monochrome Precision + Craft Gold
+- [ ] Update color system to black/white/gold only (#0A0A0A, #F5F5F5, #D4AF37)
+- [ ] Replace all neon colors with monochrome palette
+- [ ] Update typography to Inter + Space Grotesk
+- [ ] Redesign cards with matte black surfaces and thin borders
+- [ ] Update button styles (gold primary, white secondary)
+- [ ] Implement sidebar navigation with gold indicators
+- [ ] Add sketch-to-UI transition animations
+- [ ] Implement hover sketch redraw effects
+- [ ] Add gold activation animations for achievements
+- [ ] Create layered UI concept (base, interaction, creative layers)
+- [ ] Add ambient depth shading in grayscale
+- [ ] Implement canvas mood layer with faint textures
+- [ ] Add focus mode behavior for task workspaces
+- [ ] Create "studio cut" page transitions
+- [ ] Implement micro-interactions for cards, forms, buttons
+- [ ] Add breathing shadow hover effects
+- [ ] Implement ink flow progress animations
+- [ ] Add skill charging/forging animations
+
+## PHASE 18: AI Portfolio Analyzer
+- [ ] Create portfolio analyzer database schema
+- [ ] Build LLM integration for motion quality analysis
+- [ ] Implement automatic tagging system
+- [ ] Create scoring algorithm for animation quality
+- [ ] Build portfolio upload handler with AI analysis
+- [ ] Create portfolio analyzer UI component
+- [ ] Display motion quality scores and tags
+- [ ] Implement real-time analysis feedback
+- [ ] Add motion metrics (fluidity, timing, weight, etc.)
+- [ ] Create portfolio comparison view
+- [ ] Add historical analysis tracking
+- [ ] Implement portfolio insights dashboard

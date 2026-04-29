@@ -15,7 +15,10 @@ import {
   user_progress,
   badges,
   user_badges,
-  analytics
+  analytics,
+  portfolio_files,
+  portfolio_analysis,
+  portfolio_insights
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -407,4 +410,107 @@ export async function updateAnalytics(userId: number, data: any) {
   return await db.update(analytics)
     .set(data)
     .where(eq(analytics.user_id, userId));
+}
+
+
+// Portfolio Files
+export async function createPortfolioFile(userId: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(portfolio_files).values({
+    user_id: userId,
+    ...data,
+  });
+}
+
+export async function getPortfolioFilesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(portfolio_files)
+    .where(eq(portfolio_files.user_id, userId))
+    .orderBy(desc(portfolio_files.createdAt));
+}
+
+export async function getPortfolioFileById(fileId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(portfolio_files)
+    .where(eq(portfolio_files.id, fileId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updatePortfolioFileStatus(fileId: number, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.update(portfolio_files)
+    .set({ status: status as any })
+    .where(eq(portfolio_files.id, fileId));
+}
+
+// Portfolio Analysis
+export async function createPortfolioAnalysis(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(portfolio_analysis).values(data);
+}
+
+export async function getPortfolioAnalysisByFileId(fileId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(portfolio_analysis)
+    .where(eq(portfolio_analysis.portfolio_file_id, fileId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getPortfolioAnalysisByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(portfolio_analysis)
+    .where(eq(portfolio_analysis.user_id, userId))
+    .orderBy(desc(portfolio_analysis.createdAt));
+}
+
+// Portfolio Insights
+export async function getOrCreatePortfolioInsights(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.select().from(portfolio_insights)
+    .where(eq(portfolio_insights.user_id, userId))
+    .limit(1);
+  
+  if (result.length > 0) {
+    return result[0];
+  }
+  
+  await db.insert(portfolio_insights).values({
+    user_id: userId,
+    files_analyzed: 0,
+  });
+  
+  const newResult = await db.select().from(portfolio_insights)
+    .where(eq(portfolio_insights.user_id, userId))
+    .limit(1);
+  
+  return newResult[0];
+}
+
+export async function updatePortfolioInsights(userId: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.update(portfolio_insights)
+    .set(data)
+    .where(eq(portfolio_insights.user_id, userId));
 }
