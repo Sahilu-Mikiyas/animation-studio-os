@@ -1,219 +1,578 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Award, Star, Zap, TrendingUp, Edit2, Loader2 } from "lucide-react";
+import {
+  Zap,
+  TrendingUp,
+  Star,
+  Edit2,
+  Lock,
+  CheckCircle,
+  Loader2,
+  Shield,
+  Clock,
+  ArrowUpRight,
+} from "lucide-react";
+
+const C = {
+  bg:      "#0A0A0A",
+  card:    "#111111",
+  surface: "#161616",
+  raised:  "#1A1A1A",
+  border:  "#2A2A2A",
+  white:   "#F5F5F5",
+  muted:   "#B8B8B8",
+  dim:     "#555555",
+  gold:    "#D4AF37",
+};
 
 const SKILL_TREE = [
-  { id: 1, name: "Animation Basics", level: 1, unlocked: true },
-  { id: 2, name: "Timing & Spacing", level: 2, unlocked: true },
-  { id: 3, name: "Character Movement", level: 3, unlocked: true },
-  { id: 4, name: "Advanced Rigging", level: 4, unlocked: false },
-  { id: 5, name: "VFX Mastery", level: 4, unlocked: false },
-  { id: 6, name: "Motion Graphics", level: 3, unlocked: true },
-  { id: 7, name: "Facial Animation", level: 3, unlocked: false },
-  { id: 8, name: "3D Modeling", level: 2, unlocked: true },
+  { id: 1, name: "Animation Basics",    req: "L1", unlocked: true,  progress: 100 },
+  { id: 2, name: "Timing & Spacing",    req: "L1", unlocked: true,  progress: 100 },
+  { id: 3, name: "Character Movement",  req: "L2", unlocked: true,  progress: 65  },
+  { id: 4, name: "3D Modeling",         req: "L2", unlocked: true,  progress: 80  },
+  { id: 5, name: "Motion Graphics",     req: "L3", unlocked: true,  progress: 40  },
+  { id: 6, name: "Facial Animation",    req: "L3", unlocked: false, progress: 0   },
+  { id: 7, name: "Advanced Rigging",    req: "L4", unlocked: false, progress: 0   },
+  { id: 8, name: "VFX Mastery",         req: "L4", unlocked: false, progress: 0   },
 ];
 
-const BADGES = [
-  { id: 1, name: "First Steps", icon: "🎬", description: "Complete your first assessment" },
-  { id: 2, name: "Quick Learner", icon: "⚡", description: "Complete 5 learning modules" },
-  { id: 3, name: "Perfect Score", icon: "💯", description: "Score 100% on an assessment" },
-  { id: 4, name: "Consistency", icon: "📈", description: "Complete tasks for 7 days straight" },
-  { id: 5, name: "Team Player", icon: "👥", description: "Collaborate on 10 projects" },
-  { id: 6, name: "Master Animator", icon: "🏆", description: "Reach level 10" },
+const BADGE_LIST = [
+  { id: 1, icon: Zap,           name: "First Steps",      desc: "Complete first assessment"      },
+  { id: 2, icon: Star,          name: "Quick Learner",    desc: "Complete 5 learning modules"    },
+  { id: 3, icon: CheckCircle,   name: "Perfect Score",    desc: "Score 100% on an assessment"    },
+  { id: 4, icon: TrendingUp,    name: "Consistency",      desc: "Complete tasks 7 days straight" },
+  { id: 5, icon: Shield,        name: "Team Player",      desc: "Collaborate on 10 projects"     },
+  { id: 6, icon: ArrowUpRight,  name: "Master Animator",  desc: "Reach level 10"                 },
 ];
+
+const CAREER_TRACK = ["Trainee", "Junior", "Core", "Senior", "Lead"];
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    name: user?.name || "",
-    bio: "Passionate animator and creative professional",
-  });
+  const [bio, setBio] = useState("Passionate animator and creative professional");
 
   const { data: profile, isLoading } = trpc.profile.get.useQuery();
-  const { data: badges } = trpc.profile.getBadges.useQuery();
-  const { data: analytics } = trpc.profile.getAnalytics.useQuery();
+  const { data: badges }             = trpc.profile.getBadges.useQuery();
+  const { data: analytics }          = trpc.profile.getAnalytics.useQuery();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", backgroundColor: C.bg }}>
+        <Loader2 style={{ width: "20px", height: "20px", color: C.gold }} className="animate-spin" />
       </div>
     );
   }
 
+  const level          = profile?.level ?? 1;
+  const xp             = profile?.xp ?? 0;
+  const xpProgress     = (xp % 1000) / 10;
+  const careerIndex    = Math.min(Math.floor(level / 2), CAREER_TRACK.length - 1);
+
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-6xl mx-auto space-y-12">
-        {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-4xl font-bold text-foreground">{user?.name}</h1>
-            <Button
-              onClick={() => setIsEditing(!isEditing)}
-              variant="outline"
-              size="sm"
+    <div
+      className="page-enter"
+      style={{
+        minHeight:       "100vh",
+        backgroundColor: C.bg,
+        padding:         "2.5rem",
+      }}
+    >
+      {/* ── Profile header ──────────────────────────────────────── */}
+      <div
+        style={{
+          display:        "flex",
+          alignItems:     "flex-start",
+          justifyContent: "space-between",
+          marginBottom:   "2.5rem",
+          paddingBottom:  "1.5rem",
+          borderBottom:   `1px solid ${C.border}`,
+          gap:            "1.5rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+          {/* Avatar ring */}
+          <div
+            style={{
+              width:           "64px",
+              height:          "64px",
+              borderRadius:    "50%",
+              border:          `2px solid ${C.gold}`,
+              display:         "flex",
+              alignItems:      "center",
+              justifyContent:  "center",
+              backgroundColor: C.raised,
+              fontSize:        "1.5rem",
+              fontWeight:      "700",
+              fontFamily:      "'Space Grotesk', sans-serif",
+              color:           C.white,
+              flexShrink:      0,
+            }}
+          >
+            {user?.name?.charAt(0).toUpperCase() ?? "A"}
+          </div>
+          <div>
+            <h1
+              style={{
+                fontSize:      "1.5rem",
+                fontWeight:    "700",
+                fontFamily:    "'Space Grotesk', sans-serif",
+                letterSpacing: "-0.5px",
+                color:         C.white,
+                marginBottom:  "4px",
+              }}
             >
-              <Edit2 className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
-          </div>
-          <p className="text-muted-foreground">
-            {editData.bio}
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <Card className="bg-card border-border p-6 space-y-3 text-center">
-            <div className="text-4xl font-bold text-primary">{profile?.level || 1}</div>
-            <p className="text-sm text-muted-foreground">Current Level</p>
-          </Card>
-
-          <Card className="bg-card border-border p-6 space-y-3 text-center">
-            <div className="text-4xl font-bold text-secondary">{profile?.xp || 0}</div>
-            <p className="text-sm text-muted-foreground">Total XP</p>
-          </Card>
-
-          <Card className="bg-card border-border p-6 space-y-3 text-center">
-            <div className="text-4xl font-bold text-accent">{badges?.length || 0}</div>
-            <p className="text-sm text-muted-foreground">Badges Earned</p>
-          </Card>
-
-          <Card className="bg-card border-border p-6 space-y-3 text-center">
-            <div className="text-4xl font-bold text-primary">{analytics?.tasks_completed || 0}</div>
-            <p className="text-sm text-muted-foreground">Tasks Done</p>
-          </Card>
-        </div>
-
-        {/* XP Progress */}
-        <Card className="bg-card border-border p-6 space-y-4">
-          <h2 className="text-xl font-bold text-foreground">Level Progress</h2>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Level {profile?.level || 1}</span>
-              <span className="text-muted-foreground">{profile?.xp || 0} / 1000 XP</span>
-            </div>
-            <div className="w-full h-3 bg-input rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
-                style={{ width: `${((profile?.xp || 0) % 1000) / 10}%` }}
-              ></div>
+              {user?.name}
+            </h1>
+            {isEditing ? (
+              <input
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                autoFocus
+                className="studio-input"
+                style={{ maxWidth: "360px", fontSize: "0.875rem" }}
+              />
+            ) : (
+              <p style={{ fontSize: "0.875rem", color: C.muted }}>{bio}</p>
+            )}
+            <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+              <span className="chip chip-gold">{CAREER_TRACK[careerIndex]}</span>
+              <span className="chip chip-white">{user?.role}</span>
             </div>
           </div>
-        </Card>
+        </div>
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className="btn-ghost"
+          style={{ fontSize: "0.8125rem", padding: "7px 14px", whiteSpace: "nowrap" }}
+        >
+          <Edit2 style={{ width: "13px", height: "13px" }} />
+          Edit Profile
+        </button>
+      </div>
 
-        {/* Skill Tree */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Skill Tree</h2>
-          <div className="grid md:grid-cols-4 gap-4">
-            {SKILL_TREE.map((skill) => (
-              <Card
-                key={skill.id}
-                className={`p-4 text-center space-y-2 transition-all ${
-                  skill.unlocked
-                    ? "bg-card border-border hover:shadow-lg"
-                    : "bg-input/50 border-border/50 opacity-50"
-                }`}
-              >
-                <div className="text-3xl">
-                  {skill.unlocked ? "🔓" : "🔒"}
+      {/* ── Stats row ──────────────────────────────────────────── */}
+      <div
+        style={{
+          display:             "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap:                 "1px",
+          backgroundColor:     C.border,
+          border:              `1px solid ${C.border}`,
+          borderRadius:        "6px",
+          overflow:            "hidden",
+          marginBottom:        "2rem",
+        }}
+      >
+        {[
+          { label: "Level",           value: `L${level}`,                   gold: true  },
+          { label: "Total XP",        value: xp.toLocaleString(),            gold: false },
+          { label: "Badges Earned",   value: String(badges?.length ?? 0),   gold: false },
+          { label: "Tasks Completed", value: String(analytics?.tasks_completed ?? 0), gold: false },
+        ].map((s, i) => (
+          <div
+            key={i}
+            style={{
+              backgroundColor: C.card,
+              padding:         "1.25rem 1.5rem",
+              textAlign:       "center",
+            }}
+          >
+            <div
+              style={{
+                fontSize:      "2rem",
+                fontWeight:    "700",
+                fontFamily:    "'Space Grotesk', sans-serif",
+                color:         s.gold ? C.gold : C.white,
+                lineHeight:    "1",
+                marginBottom:  "6px",
+              }}
+            >
+              {s.value}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: C.dim }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── XP Progress ────────────────────────────────────────── */}
+      <div
+        style={{
+          backgroundColor: C.card,
+          border:          `1px solid ${C.border}`,
+          borderRadius:    "6px",
+          padding:         "1.25rem 1.5rem",
+          marginBottom:    "2rem",
+        }}
+      >
+        <div
+          style={{
+            display:        "flex",
+            justifyContent: "space-between",
+            alignItems:     "center",
+            marginBottom:   "10px",
+          }}
+        >
+          <span style={{ fontSize: "0.8125rem", fontWeight: "600", fontFamily: "'Space Grotesk', sans-serif", color: C.white }}>
+            Level Progress
+          </span>
+          <span
+            style={{
+              fontSize:   "0.72rem",
+              fontFamily: "'JetBrains Mono', monospace",
+              color:      C.dim,
+            }}
+          >
+            {xp % 1000} / 1000 XP → L{level + 1}
+          </span>
+        </div>
+        <div className="progress-track" style={{ height: "3px" }}>
+          <div className="progress-fill" style={{ width: `${xpProgress}%` }} />
+        </div>
+        {/* Career track */}
+        <div
+          style={{
+            display:        "flex",
+            alignItems:     "center",
+            gap:            "0",
+            marginTop:      "1rem",
+          }}
+        >
+          {CAREER_TRACK.map((stage, i) => {
+            const passed  = i < careerIndex;
+            const current = i === careerIndex;
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+                  <div
+                    style={{
+                      width:           "8px",
+                      height:          "8px",
+                      borderRadius:    "50%",
+                      backgroundColor: current ? C.gold : passed ? C.white : C.raised,
+                      border:          `1px solid ${current ? C.gold : passed ? "#555" : C.border}`,
+                      marginBottom:    "4px",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize:   "0.68rem",
+                      color:      current ? C.gold : passed ? C.muted : C.dim,
+                      fontWeight: current ? "600" : "400",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    {stage}
+                  </span>
                 </div>
-                <h3 className="font-semibold text-foreground">{skill.name}</h3>
-                <p className="text-xs text-muted-foreground">Level {skill.level}</p>
-                {skill.unlocked && (
-                  <div className="w-full h-1 bg-input rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full bg-primary"
-                      style={{ width: "75%" }}
-                    ></div>
-                  </div>
+                {i < CAREER_TRACK.length - 1 && (
+                  <div
+                    style={{
+                      flex:            1,
+                      height:          "1px",
+                      backgroundColor: passed ? "#555" : C.border,
+                      marginBottom:    "14px",
+                    }}
+                  />
                 )}
-              </Card>
-            ))}
-          </div>
+              </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Badges */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">Achievements</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {BADGES.map((badge) => {
-              const earned = badges?.some((b: any) => b.badge_id === badge.id);
-              return (
-                <Card
-                  key={badge.id}
-                  className={`p-6 text-center space-y-3 transition-all ${
-                    earned
-                      ? "bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/50"
-                      : "bg-input/50 border-border/50 opacity-50"
-                  }`}
+      {/* ── Skill Tree ─────────────────────────────────────────── */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h2
+          style={{
+            fontSize:      "1rem",
+            fontWeight:    "600",
+            fontFamily:    "'Space Grotesk', sans-serif",
+            color:         C.white,
+            marginBottom:  "1rem",
+            letterSpacing: "-0.2px",
+          }}
+        >
+          Skill Tree
+        </h2>
+        <div
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            gap:                 "1px",
+            backgroundColor:     C.border,
+            border:              `1px solid ${C.border}`,
+            borderRadius:        "6px",
+            overflow:            "hidden",
+          }}
+        >
+          {SKILL_TREE.map((skill) => (
+            <div
+              key={skill.id}
+              style={{
+                backgroundColor: skill.unlocked ? C.card : C.surface,
+                padding:         "1.25rem",
+                opacity:         skill.unlocked ? 1 : 0.45,
+              }}
+            >
+              <div
+                style={{
+                  display:        "flex",
+                  alignItems:     "center",
+                  justifyContent: "space-between",
+                  marginBottom:   "10px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize:   "0.8125rem",
+                    fontWeight: "500",
+                    color:      skill.unlocked ? C.white : C.dim,
+                  }}
                 >
-                  <div className="text-5xl">{badge.icon}</div>
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-foreground">{badge.name}</h3>
-                    <p className="text-xs text-muted-foreground">{badge.description}</p>
+                  {skill.name}
+                </span>
+                {skill.unlocked ? (
+                  skill.progress === 100 ? (
+                    <CheckCircle style={{ width: "13px", height: "13px", color: C.gold, flexShrink: 0 }} />
+                  ) : (
+                    <span
+                      style={{
+                        fontSize:   "0.68rem",
+                        fontFamily: "'JetBrains Mono', monospace",
+                        color:      C.muted,
+                      }}
+                    >
+                      {skill.progress}%
+                    </span>
+                  )
+                ) : (
+                  <Lock style={{ width: "11px", height: "11px", color: C.dim, flexShrink: 0 }} />
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "0.68rem", fontFamily: "'JetBrains Mono', monospace", color: C.dim }}>
+                  {skill.req}
+                </span>
+              </div>
+              {skill.unlocked && (
+                <div className="progress-track" style={{ height: "2px" }}>
+                  <div
+                    className={skill.progress === 100 ? "progress-fill" : "progress-fill-white"}
+                    style={{ width: `${skill.progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Achievements ───────────────────────────────────────── */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h2
+          style={{
+            fontSize:      "1rem",
+            fontWeight:    "600",
+            fontFamily:    "'Space Grotesk', sans-serif",
+            color:         C.white,
+            marginBottom:  "1rem",
+            letterSpacing: "-0.2px",
+          }}
+        >
+          Achievements
+        </h2>
+        <div
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+            gap:                 "1px",
+            backgroundColor:     C.border,
+            border:              `1px solid ${C.border}`,
+            borderRadius:        "6px",
+            overflow:            "hidden",
+          }}
+        >
+          {BADGE_LIST.map((badge) => {
+            const earned = badges?.some((b: any) => b.badge_id === badge.id);
+            const Icon   = badge.icon;
+            return (
+              <div
+                key={badge.id}
+                style={{
+                  backgroundColor: earned ? C.card : C.surface,
+                  padding:         "1.25rem",
+                  opacity:         earned ? 1 : 0.4,
+                  display:         "flex",
+                  alignItems:      "center",
+                  gap:             "12px",
+                }}
+              >
+                <div
+                  style={{
+                    width:           "32px",
+                    height:          "32px",
+                    border:          `1px solid ${earned ? C.gold : C.border}`,
+                    borderRadius:    "6px",
+                    display:         "flex",
+                    alignItems:      "center",
+                    justifyContent:  "center",
+                    flexShrink:      0,
+                    backgroundColor: earned ? "rgba(212,175,55,0.08)" : "transparent",
+                  }}
+                >
+                  <Icon
+                    style={{
+                      width:  "14px",
+                      height: "14px",
+                      color:  earned ? C.gold : C.dim,
+                    }}
+                  />
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontSize:   "0.8125rem",
+                      fontWeight: "600",
+                      color:      earned ? C.white : C.dim,
+                      marginBottom: "2px",
+                    }}
+                  >
+                    {badge.name}
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: C.dim }}>{badge.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Performance & Activity ─────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        {/* Performance */}
+        <div
+          style={{
+            backgroundColor: C.card,
+            border:          `1px solid ${C.border}`,
+            borderRadius:    "6px",
+            padding:         "1.5rem",
+          }}
+        >
+          <h3
+            style={{
+              fontSize:      "0.8125rem",
+              fontWeight:    "600",
+              fontFamily:    "'Space Grotesk', sans-serif",
+              color:         C.white,
+              marginBottom:  "1.25rem",
+            }}
+          >
+            Performance Stats
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {[
+              { icon: Zap,        label: "Average Score",  value: `${analytics?.average_score ?? 0}%` },
+              { icon: TrendingUp, label: "Improvement",    value: `+${analytics?.average_score ?? 0}%` },
+              { icon: Star,       label: "Studio Rank",    value: "Top 10%" },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display:        "flex",
+                    alignItems:     "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Icon style={{ width: "13px", height: "13px", color: C.dim }} />
+                    <span style={{ fontSize: "0.8125rem", color: C.muted }}>{stat.label}</span>
                   </div>
-                  {earned && (
-                    <div className="text-xs text-primary font-medium">✓ Earned</div>
-                  )}
-                </Card>
+                  <span
+                    style={{
+                      fontSize:   "0.8125rem",
+                      fontWeight: "600",
+                      color:      C.white,
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    {stat.value}
+                  </span>
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* Performance Stats */}
-        <Card className="bg-card border-border p-6 space-y-6">
-          <h2 className="text-xl font-bold text-foreground">Performance Stats</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Average Score
-              </p>
-              <p className="text-3xl font-bold text-primary">{analytics?.average_score || 0}%</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Improvement
-              </p>
-              <p className="text-3xl font-bold text-secondary">+{(analytics?.average_score as any) || 0}%</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Star className="w-4 h-4" />
-                Rank
-              </p>
-              <p className="text-3xl font-bold text-accent">Top 10%</p>
-            </div>
+        {/* Activity */}
+        <div
+          style={{
+            backgroundColor: C.card,
+            border:          `1px solid ${C.border}`,
+            borderRadius:    "6px",
+            overflow:        "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding:      "1.25rem 1.5rem",
+              borderBottom: `1px solid ${C.border}`,
+            }}
+          >
+            <h3
+              style={{
+                fontSize:   "0.8125rem",
+                fontWeight: "600",
+                fontFamily: "'Space Grotesk', sans-serif",
+                color:      C.white,
+              }}
+            >
+              Recent Activity
+            </h3>
           </div>
-        </Card>
-
-        {/* Activity Timeline */}
-        <Card className="bg-card border-border p-6 space-y-4">
-          <h2 className="text-xl font-bold text-foreground">Recent Activity</h2>
-          <div className="space-y-3">
-            {[
-              { date: "Today", activity: "Completed Walk Cycle assessment", icon: "✓" },
-              { date: "Yesterday", activity: "Earned 'Quick Learner' badge", icon: "🏆" },
-              { date: "2 days ago", activity: "Reached Level 5", icon: "⬆️" },
-              { date: "3 days ago", activity: "Completed 5 learning modules", icon: "📚" },
-            ].map((item, idx) => (
-              <div key={idx} className="flex gap-4 pb-3 border-b border-border last:border-0">
-                <div className="text-2xl">{item.icon}</div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">{item.activity}</p>
-                  <p className="text-xs text-muted-foreground">{item.date}</p>
-                </div>
+          {[
+            { date: "Today",    note: "Completed Walk Cycle assessment",    type: "assessment" },
+            { date: "Yesterday",note: "Earned Quick Learner badge",         type: "badge"      },
+            { date: "2d ago",   note: "Reached Level 5",                   type: "level"      },
+            { date: "3d ago",   note: "Completed 5 learning modules",      type: "learning"   },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              style={{
+                display:      "flex",
+                alignItems:   "flex-start",
+                gap:          "12px",
+                padding:      "0.875rem 1.5rem",
+                borderBottom: idx < 3 ? `1px solid ${C.border}` : "none",
+              }}
+            >
+              <div
+                style={{
+                  width:           "6px",
+                  height:          "6px",
+                  borderRadius:    "50%",
+                  backgroundColor: item.type === "level" ? C.gold : C.border,
+                  marginTop:       "5px",
+                  flexShrink:      0,
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: "0.8125rem", color: C.white, marginBottom: "2px" }}>
+                  {item.note}
+                </p>
+                <p style={{ fontSize: "0.72rem", color: C.dim, display: "flex", alignItems: "center", gap: "4px" }}>
+                  <Clock style={{ width: "10px", height: "10px" }} />
+                  {item.date}
+                </p>
               </div>
-            ))}
-          </div>
-        </Card>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

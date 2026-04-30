@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import DashboardLayout from "./components/DashboardLayout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import { useAuth } from "./_core/hooks/useAuth";
@@ -18,26 +19,43 @@ import PaymentsPage from "./pages/PaymentsPage";
 import AdminPanel from "./pages/AdminPanel";
 import PortfolioAnalyzer from "./pages/PortfolioAnalyzer";
 
-function ProtectedRoute({ component: Component, requiredRole }: { component: React.ComponentType<any>; requiredRole?: string }) {
+function AppRoute({
+  component: Component,
+  requiredRole,
+}: {
+  component: React.ComponentType<any>;
+  requiredRole?: string;
+}) {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div
+        style={{
+          display:         "flex",
+          alignItems:      "center",
+          justifyContent:  "center",
+          minHeight:       "100vh",
+          backgroundColor: "#0A0A0A",
+        }}
+      >
+        <Loader2
+          style={{ width: "24px", height: "24px", color: "#D4AF37" }}
+          className="animate-spin"
+        />
       </div>
     );
   }
 
-  if (!user) {
-    return <LoginPage />;
-  }
+  if (!user) return <LoginPage />;
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <NotFound />;
-  }
+  if (requiredRole && user.role !== requiredRole) return <NotFound />;
 
-  return <Component />;
+  return (
+    <DashboardLayout>
+      <Component />
+    </DashboardLayout>
+  );
 }
 
 function Router() {
@@ -45,32 +63,39 @@ function Router() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div
+        style={{
+          display:         "flex",
+          alignItems:      "center",
+          justifyContent:  "center",
+          minHeight:       "100vh",
+          backgroundColor: "#0A0A0A",
+        }}
+      >
+        <Loader2
+          style={{ width: "24px", height: "24px", color: "#D4AF37" }}
+          className="animate-spin"
+        />
       </div>
     );
   }
 
   return (
     <Switch>
-      {/* Public routes */}
+      {/* Public */}
       <Route path="/" component={Home} />
       <Route path="/login" component={LoginPage} />
 
-      {/* Protected routes - Applicant/Artist */}
-      <Route path="/apply" component={() => <ProtectedRoute component={ApplicationPortal} />} />
-      <Route path="/assessment" component={() => <ProtectedRoute component={AssessmentModule} />} />
-      <Route path="/portfolio" component={() => <ProtectedRoute component={PortfolioAnalyzer} />} />
-      <Route path="/learning" component={() => <ProtectedRoute component={LearningPage} />} />
-      <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
-      <Route path="/tasks" component={() => <ProtectedRoute component={TasksPage} />} />
-      <Route path="/payments" component={() => <ProtectedRoute component={PaymentsPage} />} />
-
-      {/* Admin routes */}
-      <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} requiredRole="admin" />} />
-
-      {/* Dashboard - main hub for authenticated users */}
-      <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardHub} />} />
+      {/* Authenticated app routes */}
+      <Route path="/dashboard"  component={() => <AppRoute component={DashboardHub} />} />
+      <Route path="/apply"      component={() => <AppRoute component={ApplicationPortal} />} />
+      <Route path="/assessment" component={() => <AppRoute component={AssessmentModule} />} />
+      <Route path="/portfolio"  component={() => <AppRoute component={PortfolioAnalyzer} />} />
+      <Route path="/learning"   component={() => <AppRoute component={LearningPage} />} />
+      <Route path="/profile"    component={() => <AppRoute component={ProfilePage} />} />
+      <Route path="/tasks"      component={() => <AppRoute component={TasksPage} />} />
+      <Route path="/payments"   component={() => <AppRoute component={PaymentsPage} />} />
+      <Route path="/admin"      component={() => <AppRoute component={AdminPanel} requiredRole="admin" />} />
 
       {/* 404 */}
       <Route path="/404" component={NotFound} />
@@ -79,7 +104,7 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
@@ -91,5 +116,3 @@ function App() {
     </ErrorBoundary>
   );
 }
-
-export default App;
