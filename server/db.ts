@@ -116,6 +116,13 @@ export async function getUserById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function updateUser(id: number, data: { name?: string | null; bio?: string | null; avatar_url?: string | null; portfolio_links?: string[] | null }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.update(users).set(data as any).where(eq(users.id, id));
+}
+
 // Applications
 export async function createApplication(userId: number, data: any) {
   const db = await getDb();

@@ -58,7 +58,7 @@ export default function PaymentsPage() {
   };
 
   const totalEarnings = payments?.reduce((sum: number, p: any) => {
-    return p.type === "payment"
+    return p.type !== "withdrawal"
       ? sum + parseFloat(p.amount ?? 0)
       : sum - parseFloat(p.amount ?? 0);
   }, 0) ?? 0;
@@ -161,7 +161,7 @@ export default function PaymentsPage() {
 
             {payments && payments.length > 0 ? (
               payments.slice(0, 10).map((p: any, idx: number) => {
-                const isPayment = p.type === "payment";
+                const isPayment = p.type !== "withdrawal";
                 return (
                   <div
                     key={idx}
@@ -195,7 +195,7 @@ export default function PaymentsPage() {
                       </div>
                       <div>
                         <p style={{ fontSize: "0.8125rem", color: C.white, marginBottom: "2px" }}>
-                          {isPayment ? "Payment Received" : "Withdrawal"}
+                          {p.type === "salary" ? "Salary" : p.type === "bonus" ? "Bonus" : "Withdrawal"}
                         </p>
                         <p style={{ fontSize: "0.72rem", color: C.dim, fontFamily: "'JetBrains Mono', monospace" }}>
                           {new Date(p.createdAt).toLocaleDateString()}

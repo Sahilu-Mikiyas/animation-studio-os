@@ -27,17 +27,21 @@ const C = {
 };
 
 const STATUS_CONFIG: Record<string, { icon: typeof Circle; label: string; color: string }> = {
-  pending:     { icon: Circle,       label: "Pending",     color: "#555555" },
-  in_progress: { icon: AlertCircle,  label: "In Progress", color: "#B8B8B8" },
-  submitted:   { icon: Upload,       label: "Submitted",   color: "#D4AF37" },
-  completed:   { icon: CheckCircle,  label: "Completed",   color: "#6A9A6A" },
-  revision:    { icon: MessageSquare,label: "Revision",    color: "#C06060" },
+  pending:      { icon: Circle,        label: "Pending",      color: "#555555" },
+  in_progress:  { icon: AlertCircle,   label: "In Progress",  color: "#B8B8B8" },
+  submitted:    { icon: Upload,        label: "Submitted",    color: "#D4AF37" },
+  under_review: { icon: AlertCircle,   label: "Under Review", color: "#B8B8B8" },
+  completed:    { icon: CheckCircle,   label: "Completed",    color: "#6A9A6A" },
+  revision:     { icon: MessageSquare, label: "Revision",     color: "#C06060" },
+  rejected:     { icon: X,             label: "Rejected",     color: "#C06060" },
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  urgent: { label: "URGENT", color: "#C06060" },
-  high:   { label: "HIGH",   color: "#B8B8B8" },
-  normal: { label: "NORMAL", color: "#555555" },
+  urgent: { label: "URGENT",  color: "#C06060" },
+  high:   { label: "HIGH",    color: "#B8B8B8" },
+  medium: { label: "MEDIUM",  color: "#888888" },
+  normal: { label: "NORMAL",  color: "#555555" },
+  low:    { label: "LOW",     color: "#555555" },
 };
 
 const MOCK_TASKS = [
@@ -109,7 +113,9 @@ export default function TasksPage() {
     );
   }
 
-  const displayTasks = MOCK_TASKS.filter((t) => {
+  const allTasks: any[] = (tasks && tasks.length > 0) ? tasks : MOCK_TASKS;
+
+  const displayTasks = allTasks.filter((t: any) => {
     if (activeFilter === "All")         return true;
     if (activeFilter === "Production")  return t.type === "production";
     if (activeFilter === "Learning")    return t.type === "learning";
@@ -120,10 +126,10 @@ export default function TasksPage() {
   });
 
   const counts = {
-    total:      MOCK_TASKS.length,
-    active:     MOCK_TASKS.filter((t) => t.status === "in_progress").length,
-    revision:   MOCK_TASKS.filter((t) => t.status === "revision").length,
-    completed:  MOCK_TASKS.filter((t) => t.status === "completed").length,
+    total:     allTasks.length,
+    active:    allTasks.filter((t: any) => t.status === "in_progress").length,
+    revision:  allTasks.filter((t: any) => t.status === "revision").length,
+    completed: allTasks.filter((t: any) => t.status === "completed").length,
   };
 
   return (

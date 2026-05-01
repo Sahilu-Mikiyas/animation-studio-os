@@ -273,8 +273,7 @@ export const appRouter = router({
         portfolio_links: z.array(z.string()).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Update user in database
-        // This would require adding an update function to db.ts
+        await db.updateUser(ctx.user.id, input);
         return { success: true };
       }),
 
